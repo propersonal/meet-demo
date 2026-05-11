@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-автоматизація зустрічей — Інтерактивна демонстрація</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0ede8;
+  --s1: #e8e4de;
+  --s2: #dedad3;
+  --s3: #ffffff;
+  --border: #d4cfc8;
+  --border2: #c8c2ba;
+  --ink: #1a1714;
+  --ink2: #6b6460;
+  --ink3: #a09890;
+  --accent: #c8410a;
+  --accent2: #2d6a4f;
+  --accent3: #1a4a7a;
+  --gold: #b8860b;
+  --tag-bg: rgba(200,65,10,0.08);
+  --tag-border: rgba(200,65,10,0.2);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Subtle paper texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(200,65,10,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(45,106,79,0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== HERO ===== */
+.hero {
+  padding: 64px 0 48px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+}
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.eyebrow-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+
+.eyebrow-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: end;
+}
+
+@media(max-width:900px) { .hero-grid { grid-template-columns: 1fr; gap: 32px; } }
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* Intro text block */
+.intro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 48px;
+  background: var(--s3);
+}
+
+@media(max-width:900px) { .intro-grid { grid-template-columns: 1fr; } }
+
+.intro-cell {
+  padding: 28px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.intro-cell:last-child { border-right: none; }
+
+.intro-cell::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.intro-cell:nth-child(1)::before { background: var(--accent); }
+.intro-cell:nth-child(2)::before { background: var(--accent2); }
+.intro-cell:nth-child(3)::before { background: var(--accent3); }
+
+.intro-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 12px;
+}
+
+.intro-cell p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink2);
+  font-weight: 400;
+}
+
+.intro-cell p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ===== TABS ===== */
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 48px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  padding: 16px 28px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-btn:hover { color: var(--ink); }
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  background: var(--s1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--ink3);
+}
+
+.tab-btn.active .tab-num {
+  background: var(--tag-bg);
+  color: var(--accent);
+}
+
+.panel { display: none; }
+.panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== DEMO LAYOUT ===== */
+.demo-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media(max-width:1100px) { .demo-layout { grid-template-columns: 1fr; } }
+
+/* ===== FLOW VISUALIZATION ===== */
+.flow-viz {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.flow-header {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flow-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.flow-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+
+.flow-badge.online { color: var(--accent2); border-color: rgba(45,106,79,0.3); background: rgba(45,106,79,0.06); }
+.flow-badge.offline { color: var(--accent); border-color: rgba(200,65,10,0.3); background: rgba(200,65,10,0.06); }
+.flow-badge.prep { color: var(--accent3); border-color: rgba(26,74,122,0.3); background: rgba(26,74,122,0.06); }
+
+.flow-body { padding: 28px; }
+
+/* Flow steps */
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.fstep {
+  display: flex;
+  gap: 20px;
+  cursor: pointer;
+  position: relative;
+  padding-bottom: 0;
+}
+
+.fstep:not(:last-child) {
+  padding-bottom: 8px;
+}
+
+.fstep-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+}
+
+.fstep-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 1px solid var(--border);
+  background: var(--s1);
+  transition: all 0.25s;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.fstep.active .fstep-icon,
+.fstep:hover .fstep-icon {
+  border-color: var(--accent);
+  background: var(--tag-bg);
+  transform: scale(1.08);
+}
+
+.fstep-line {
+  width: 1px;
+  flex: 1;
+  min-height: 24px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.fstep-content {
+  flex: 1;
+  padding: 8px 0 24px;
+}
+
+.fstep:last-child .fstep-content { padding-bottom: 0; }
+
+.fstep-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.fstep.active .fstep-title { color: var(--accent); }
+
+.fstep-desc {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.fstep-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ftag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--ink3);
+  background: var(--s1);
+}
+
+.ftag.red { color: var(--accent); border-color: rgba(200,65,10,0.2); background: rgba(200,65,10,0.05); }
+.ftag.green { color: var(--accent2); border-color: rgba(45,106,79,0.2); background: rgba(45,106,79,0.05); }
+.ftag.blue { color: var(--accent3); border-color: rgba(26,74,122,0.2); background: rgba(26,74,122,0.05); }
+
+/* Detail expand */
+.fstep-detail {
+  display: none;
+  margin-top: 12px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.fstep.active .fstep-detail { display: block; }
+
+.detail-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink3);
+  margin-bottom: 10px;
+}
+
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.5;
+}
+
+.detail-item::before {
+  content: '→';
+  color: var(--accent);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ===== SIMULATION PANEL ===== */
+.sim-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
+.sim-card {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.sim-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--s1);
+}
+
+.sim-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent2);
+  animation: simPulse 2s infinite;
+}
+
+@keyframes simPulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.sim-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sim-body {
+  padding: 20px;
+}
+
+/* Transcript simulation */
+.transcript-wrap {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--ink2);
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.transcript-wrap::-webkit-scrollbar { display: none; }
+
+.t-line { margin-bottom: 4px; }
+.t-speaker { color: var(--accent3); font-weight: 500; }
+.t-speaker.green { color: var(--accent2); }
+.t-time { color: var(--ink3); margin-right: 8px; }
+
+/* Processing steps */
+.processing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.proc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  opacity: 0.4;
+  transition: all 0.4s;
+}
+
+.proc-item.done {
+  opacity: 1;
+  border-color: rgba(45,106,79,0.3);
+  background: rgba(45,106,79,0.05);
+}
+
+.proc-item.active {
+  opacity: 1;
+  border-color: rgba(200,65,10,0.3);
+  background: rgba(200,65,10,0.05);
+}
+
+.proc-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.proc-text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--ink2);
+}
+
+.proc-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+}
+
+.proc-item.done .proc-status { color: var(--accent2); }
+.proc-item.active .proc-status { color: var(--accent); }
+
+/* Output card */
+.output-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  display: none;
+}
+
+.output-card.show { display: block; animation: fadeUp 0.4s ease; }
+
+.output-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink3);
+  margin-bottom: 12px;
+}
+
+.output-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.5;
+}
+
+.output-item:last-child { border-bottom: none; }
+
+.output-marker {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Run button */
+.run-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.run-btn.red {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.run-btn.red:hover { background: #a33508; }
+
+.run-btn.green {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: white;
+}
+
+.run-btn.green:hover { background: #245c43; }
+
+.run-btn.blue {
+  background: var(--accent3);
+  border-color: var(--accent3);
+  color: white;
+}
+
+.run-btn.blue:hover { background: #153d66; }
+
+.run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Audio wave */
+.audio-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 48px;
+  padding: 8px 0;
+}
+
+.wave-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: wave 1s ease infinite;
+}
+
+.wave-bar:nth-child(odd) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3n) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4n) { animation-delay: 0.3s; }
+
+@keyframes wave {
+  0%,100% { height: 8px; opacity: 0.3; }
+  50% { height: 32px; opacity: 1; }
+}
+
+/* Dictaphone UI */
+.dictaphone {
+  background: #1a1714;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.dict-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #6b6460;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.dict-status.recording { color: var(--accent); animation: simPulse 1s infinite; }
+
+.dict-timer {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 36px;
+  font-weight: 400;
+  color: white;
+  margin-bottom: 20px;
+  letter-spacing: 0.05em;
+}
+
+.dict-btn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(200,65,10,0.4);
+}
+
+.dict-btn:hover { transform: scale(1.08); }
+.dict-btn.recording { background: #c0392b; animation: recPulse 1s infinite; }
+
+@keyframes recPulse {
+  0%,100% { box-shadow: 0 4px 16px rgba(192,57,43,0.4); }
+  50% { box-shadow: 0 4px 32px rgba(192,57,43,0.7); }
+}
+
+/* Prep brief */
+.brief-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.brief-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.brief-row:last-child { border-bottom: none; }
+
+.brief-key {
+  width: 140px;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink3);
+  background: var(--s2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+}
+
+.brief-val {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+.brief-val strong { color: var(--ink); font-weight: 600; }
+
+/* Progress bar */
+.prog-wrap { margin: 16px 0; }
+
+.prog-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink3);
+  margin-bottom: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.prog-bar {
+  height: 4px;
+  background: var(--s2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0;
+  transition: width 1.5s ease;
+}
+
+.prog-fill.red { background: var(--accent); }
+.prog-fill.green { background: var(--accent2); }
+.prog-fill.blue { background: var(--accent3); }
+
+/* Notification */
+.notif {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(45,106,79,0.06);
+  border: 1px solid rgba(45,106,79,0.2);
+  border-radius: 10px;
+  margin-top: 12px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.notif.show { opacity: 1; }
+.notif-icon { font-size: 18px; flex-shrink: 0; }
+.notif-text { font-size: 12px; color: var(--ink2); line-height: 1.5; }
+.notif-text strong { color: var(--accent2); }
+
+/* Also section */
+.also-section {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-top: 48px;
+  margin-bottom: 64px;
+}
+
+.also-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.also-sub {
+  font-size: 13px;
+  color: var(--ink2);
+  margin-bottom: 24px;
+  font-weight: 300;
+}
+
+.also-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.also-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.also-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+.also-icon { font-size: 24px; margin-bottom: 10px; }
+.also-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.also-desc { font-size: 12px; color: var(--ink2); line-height: 1.5; font-weight: 300; }
+
+/* Divider */
+.section-div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 48px 0 32px;
+}
+
+.section-div::before, .section-div::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-div span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink3);
+  white-space: nowrap;
+}
+
+/* Fade in */
+.fade { opacity: 0; transform: translateY(16px); transition: all 0.5s ease; }
+.fade.in { opacity: 1; transform: translateY(0); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero fade in">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-tag">ProPersonal Agency — AI Demo</div>
+      <div class="eyebrow-line"></div>
+      <div class="eyebrow-tag" style="color:var(--accent2);background:rgba(45,106,79,0.08);border-color:rgba(45,106,79,0.2);">Автоматизація зустрічей</div>
+    </div>
+    <div class="hero-grid">
+      <h1>AI-команда<br>для <em>зустрічей</em><br>та переговорів</h1>
+    </div>
+
+    <div class="intro-grid">
+      <div class="intro-cell">
+        <div class="intro-label">Яка проблема</div>
+        <p>Кожна зустріч — це втрачений час після неї. Олександр, керівник відділу, проводить 4-6 зустрічей на день. Після кожної треба вручну написати протокол, поставити задачі в CRM, розіслати підсумки. Це ще 30-40 хвилин після кожної зустрічі. І підготовка до наступної — знову вручну підіймати історію попередніх переговорів.</p>
+      </div>
+      <div class="intro-cell">
+        <div class="intro-label">Що автоматизує</div>
+        <p>Три AI-агенти закривають повний цикл зустрічі:<br><br>
+        <strong>Онлайн зустріч</strong> — транскрибація в реальному часі, автоматичний протокол і задачі в CRM.<br><br>
+        <strong>Офлайн зустріч</strong> — диктофон на смартфоні, після зустрічі AI обробляє запис і формує той самий результат.<br><br>
+        <strong>Підготовка</strong> — AI аналізує всі попередні зустрічі з клієнтом і формує бриф перед наступною.</p>
+      </div>
+      <div class="intro-cell">
+        <div class="intro-label">Як користуватись</div>
+        <p>Це жива демонстрація трьох сценаріїв.<br><br>
+        Перемикайтесь між вкладками вгорі — <strong>Онлайн зустріч</strong>, <strong>Офлайн зустріч</strong>, <strong>Підготовка до наступної</strong>.<br><br>
+        В кожній вкладці натискайте кнопки щоб запустити симуляцію і побачити як саме працює кожен AI-агент покроково.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-nav fade in">
+    <button class="tab-btn active" onclick="switchTab('online', this)">
+      <span class="tab-num">01</span> Онлайн зустріч
+    </button>
+    <button class="tab-btn" onclick="switchTab('offline', this)">
+      <span class="tab-num">02</span> Офлайн зустріч
+    </button>
+    <button class="tab-btn" onclick="switchTab('prep', this)">
+      <span class="tab-num">03</span> Підготовка до наступної
+    </button>
+  </div>
+
+  <!-- PANEL 1: ONLINE -->
+  <div class="panel active" id="panel-online">
+    <div class="demo-layout">
+      <div class="flow-viz fade in">
+        <div class="flow-header">
+          <div class="flow-title">Процес обробки онлайн зустрічі</div>
+          <div class="flow-badge online">Zoom / Meet / Teams</div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-steps" id="online-steps">
+
+            <div class="fstep active" onclick="setStep('online', 0)">
+              <div class="fstep-left">
+                <div class="fstep-icon">🎙️</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Зустріч відбувається — AI слухає</div>
+                <div class="fstep-desc">AI-агент підключається до онлайн дзвінка і транскрибує розмову в реальному часі. Олександр веде зустріч звично — нічого не змінюється.</div>
+                <div class="fstep-tags">
+                  <span class="ftag green">Whisper API</span>
+                  <span class="ftag blue">Real-time</span>
+                  <span class="ftag">Zoom / Meet</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Що відбувається технічно</div>
+                  <div class="detail-list">
+                    <div class="detail-item">AI-агент підключається як учасник зустрічі або через запис екрану</div>
+                    <div class="detail-item">Whisper API транскрибує аудіо з розпізнаванням мовця</div>
+                    <div class="detail-item">Транскрипт зберігається в реальному часі — жодна фраза не губиться</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('online', 1)">
+              <div class="fstep-left">
+                <div class="fstep-icon">📝</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Зустріч завершена — AI формує протокол</div>
+                <div class="fstep-desc">Одразу після закінчення дзвінка ChatGPT аналізує транскрипт і формує структурований протокол: учасники, ключові рішення, домовленості.</div>
+                <div class="fstep-tags">
+                  <span class="ftag red">ChatGPT API</span>
+                  <span class="ftag">~2 хвилини</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Що входить в протокол</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Учасники зустрічі та їх ролі</div>
+                    <div class="detail-item">Ключові рішення прийняті на зустрічі</div>
+                    <div class="detail-item">Відкриті питання що потребують вирішення</div>
+                    <div class="detail-item">Короткий підсумок для тих хто не був присутній</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('online', 2)">
+              <div class="fstep-left">
+                <div class="fstep-icon">✅</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">AI витягує задачі і ставить в CRM</div>
+                <div class="fstep-desc">Агент автоматично визначає хто що має зробити і до якого дедлайну. Задачі створюються в CRM з відповідальними і термінами — без участі Олександра.</div>
+                <div class="fstep-tags">
+                  <span class="ftag blue">CRM інтеграція</span>
+                  <span class="ftag green">Make.com</span>
+                  <span class="ftag">Автоматично</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Приклад задач з зустрічі</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Менеджер Петренко → надіслати КП до п'ятниці</div>
+                    <div class="detail-item">Олександр → узгодити бюджет з директором до 20-го</div>
+                    <div class="detail-item">Юрист → перевірити договір протягом тижня</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('online', 3)">
+              <div class="fstep-left">
+                <div class="fstep-icon">📨</div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Підсумки розсилаються учасникам</div>
+                <div class="fstep-desc">Протокол і персональні задачі автоматично надсилаються кожному учаснику на email або в Telegram. Олександр не надсилає нічого вручну.</div>
+                <div class="fstep-tags">
+                  <span class="ftag">Email / Telegram</span>
+                  <span class="ftag green">Персоналізовано</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Кожен отримує</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Загальний протокол зустрічі</div>
+                    <div class="detail-item">Свої особисті задачі з дедлайнами</div>
+                    <div class="detail-item">Посилання на повний транскрипт якщо потрібно</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulation -->
+      <div class="sim-panel">
+        <div class="sim-card">
+          <div class="sim-header">
+            <div class="sim-dot"></div>
+            <div class="sim-title">Симуляція — онлайн зустріч</div>
+          </div>
+          <div class="sim-body">
+            <div class="transcript-wrap" id="onlineTranscript">
+              <div class="t-line"><span class="t-time">09:01</span><span class="t-speaker">[Олександр]</span> Доброго ранку. Обговорюємо постачання на Q4.</div>
+              <div class="t-line"><span class="t-time">09:02</span><span class="t-speaker green">[Постачальник]</span> Ми готові збільшити обсяг на 15%.</div>
+              <div class="t-line"><span class="t-time">09:04</span><span class="t-speaker">[Олександр]</span> Нам потрібно підтвердження ціни до п'ятниці.</div>
+              <div class="t-line"><span class="t-time">09:06</span><span class="t-speaker green">[Постачальник]</span> Надішлю КП сьогодні до 18:00.</div>
+              <div class="t-line"><span class="t-time">09:08</span><span class="t-speaker">[Олександр]</span> Добре. Юристу треба буде перевірити договір.</div>
+              <div class="t-line"><span class="t-time">09:10</span><span class="t-speaker">[Олександр]</span> Домовились. Чекаємо КП.</div>
+            </div>
+
+            <div class="processing" id="onlineProc">
+              <div class="proc-item" id="op1">
+                <div class="proc-icon">🎙️</div>
+                <div class="proc-text">Транскрибація завершена</div>
+                <div class="proc-status">—</div>
+              </div>
+              <div class="proc-item" id="op2">
+                <div class="proc-icon">🧠</div>
+                <div class="proc-text">Формування протоколу</div>
+                <div class="proc-status">—</div>
+              </div>
+              <div class="proc-item" id="op3">
+                <div class="proc-icon">✅</div>
+                <div class="proc-text">Задачі в CRM</div>
+                <div class="proc-status">—</div>
+              </div>
+              <div class="proc-item" id="op4">
+                <div class="proc-icon">📨</div>
+                <div class="proc-text">Розсилка учасникам</div>
+                <div class="proc-status">—</div>
+              </div>
+            </div>
+
+            <div class="output-card" id="onlineOutput">
+              <div class="output-title">Результат — сформовано за 2 хв</div>
+              <div class="output-item"><div class="output-marker">📋</div><div>Протокол зустрічі надіслано 2 учасникам</div></div>
+              <div class="output-item"><div class="output-marker">✅</div><div>3 задачі створено в CRM з дедлайнами</div></div>
+              <div class="output-item"><div class="output-marker">📨</div><div>Кожен учасник отримав свої задачі особисто</div></div>
+              <div class="output-item"><div class="output-marker">⏱️</div><div>Час Олександра витрачено на підсумки: <strong>0 хвилин</strong></div></div>
+            </div>
+
+            <button class="run-btn green" id="onlineBtn" onclick="runOnline()" style="margin-top:16px">
+              ▶ Запустити обробку зустрічі
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: OFFLINE -->
+  <div class="panel" id="panel-offline">
+    <div class="demo-layout">
+      <div class="flow-viz fade in">
+        <div class="flow-header">
+          <div class="flow-title">Процес обробки офлайн зустрічі</div>
+          <div class="flow-badge offline">Диктофон на смартфоні</div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-steps" id="offline-steps">
+
+            <div class="fstep active" onclick="setStep('offline', 0)">
+              <div class="fstep-left">
+                <div class="fstep-icon">📱</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Олександр записує зустріч на диктофон</div>
+                <div class="fstep-desc">Перед початком офлайн зустрічі Олександр запускає запис на смартфоні. Звичайний диктофон або Telegram — нічого нового встановлювати не треба.</div>
+                <div class="fstep-tags">
+                  <span class="ftag">Смартфон</span>
+                  <span class="ftag red">Telegram / Voice</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Як надіслати запис</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Варіант 1: голосове повідомлення в Telegram боту</div>
+                    <div class="detail-item">Варіант 2: аудіофайл на email або в Telegram</div>
+                    <div class="detail-item">Підтримує українську, російську, англійську мову</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('offline', 1)">
+              <div class="fstep-left">
+                <div class="fstep-icon">☁️</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Запис надсилається — AI починає обробку</div>
+                <div class="fstep-desc">Після зустрічі Олександр надсилає аудіозапис в Telegram бот. Далі все автоматично — транскрибація, аналіз, структурування.</div>
+                <div class="fstep-tags">
+                  <span class="ftag blue">Whisper API</span>
+                  <span class="ftag">Make.com</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Час обробки</div>
+                  <div class="detail-list">
+                    <div class="detail-item">30-хвилинна зустріч обробляється за ~3-4 хвилини</div>
+                    <div class="detail-item">Якість транскрипції 95%+ навіть при фоновому шумі</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('offline', 2)">
+              <div class="fstep-left">
+                <div class="fstep-icon">📝</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Той самий результат що й після онлайн зустрічі</div>
+                <div class="fstep-desc">Протокол, задачі в CRM, розсилка учасникам — ідентичний процес незалежно від формату зустрічі. Олександр отримує результат в Telegram.</div>
+                <div class="fstep-tags">
+                  <span class="ftag green">CRM автоматично</span>
+                  <span class="ftag">Telegram звіт</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Що отримує Олександр в Telegram</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Короткий підсумок зустрічі — 5-7 рядків</div>
+                    <div class="detail-item">Список задач з відповідальними і дедлайнами</div>
+                    <div class="detail-item">Підтвердження що задачі поставлені в CRM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Dictaphone simulation -->
+      <div class="sim-panel">
+        <div class="sim-card">
+          <div class="sim-header">
+            <div class="sim-dot" style="background:var(--accent)"></div>
+            <div class="sim-title">Симуляція — офлайн запис</div>
+          </div>
+          <div class="sim-body">
+            <div class="dictaphone">
+              <div class="dict-status" id="dictStatus">Готовий до запису</div>
+              <div class="dict-timer" id="dictTimer">00:00</div>
+              <div class="audio-wave" id="audioWave" style="display:none">
+                <div class="wave-bar" style="height:8px"></div>
+                <div class="wave-bar" style="height:14px"></div>
+                <div class="wave-bar" style="height:20px"></div>
+                <div class="wave-bar" style="height:28px"></div>
+                <div class="wave-bar" style="height:18px"></div>
+                <div class="wave-bar" style="height:24px"></div>
+                <div class="wave-bar" style="height:32px"></div>
+                <div class="wave-bar" style="height:20px"></div>
+                <div class="wave-bar" style="height:14px"></div>
+                <div class="wave-bar" style="height:22px"></div>
+                <div class="wave-bar" style="height:28px"></div>
+                <div class="wave-bar" style="height:16px"></div>
+              </div>
+              <button class="dict-btn" id="dictBtn" onclick="toggleRecording()">🎙️</button>
+            </div>
+
+            <div class="processing" id="offlineProc" style="margin-top:16px">
+              <div class="proc-item" id="offp1">
+                <div class="proc-icon">☁️</div>
+                <div class="proc-text">Завантаження запису</div>
+                <div class="proc-status">—</div>
+              </div>
+              <div class="proc-item" id="offp2">
+                <div class="proc-icon">🎙️</div>
+                <div class="proc-text">Транскрибація аудіо</div>
+                <div class="proc-status">—</div>
+              </div>
+              <div class="proc-item" id="offp3">
+                <div class="proc-icon">✅</div>
+                <div class="proc-text">Задачі в CRM</div>
+                <div class="proc-status">—</div>
+              </div>
+            </div>
+
+            <div class="notif" id="offlineNotif">
+              <div class="notif-icon">📱</div>
+              <div class="notif-text">Олександр отримав у Telegram: <strong>протокол + 2 задачі поставлено в CRM</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: PREP -->
+  <div class="panel" id="panel-prep">
+    <div class="demo-layout">
+      <div class="flow-viz fade in">
+        <div class="flow-header">
+          <div class="flow-title">Підготовка до наступної зустрічі</div>
+          <div class="flow-badge prep">AI-аналітика переговорів</div>
+        </div>
+        <div class="flow-body">
+          <div class="flow-steps" id="prep-steps">
+
+            <div class="fstep active" onclick="setStep('prep', 0)">
+              <div class="fstep-left">
+                <div class="fstep-icon">🗂️</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Олександр запитує бриф перед зустріччю</div>
+                <div class="fstep-desc">За годину до зустрічі Олександр пише в Telegram бот: "Підготуй бриф по Постачальнику X". AI знаходить всі попередні зустрічі з цим контрагентом.</div>
+                <div class="fstep-tags">
+                  <span class="ftag blue">Telegram запит</span>
+                  <span class="ftag">~30 секунд</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">AI аналізує</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Всі попередні транскрипти зустрічей з цим контрагентом</div>
+                    <div class="detail-item">Виконані і невиконані задачі з попередніх зустрічей</div>
+                    <div class="detail-item">Ключові домовленості та їх поточний статус</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('prep', 1)">
+              <div class="fstep-left">
+                <div class="fstep-icon">🧠</div>
+                <div class="fstep-line"></div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">AI формує бриф для переговорів</div>
+                <div class="fstep-desc">Структурований документ: що домовились раніше, що виконано, що відкрито, на що звернути увагу, рекомендована позиція на переговорах.</div>
+                <div class="fstep-tags">
+                  <span class="ftag red">ChatGPT API</span>
+                  <span class="ftag green">Персоналізовано</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Що входить в бриф</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Хронологія всіх зустрічей з контрагентом</div>
+                    <div class="detail-item">Відкриті питання що досі не вирішені</div>
+                    <div class="detail-item">Рекомендована тактика переговорів</div>
+                    <div class="detail-item">Ключові цифри і домовленості для посилання</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fstep" onclick="setStep('prep', 2)">
+              <div class="fstep-left">
+                <div class="fstep-icon">📱</div>
+              </div>
+              <div class="fstep-content">
+                <div class="fstep-title">Бриф надходить в Telegram за 30 секунд</div>
+                <div class="fstep-desc">Олександр отримує готовий бриф прямо в месенджер. Читає по дорозі на зустріч — і заходить підготовленим, не витрачаючи годину на пошук в пошті.</div>
+                <div class="fstep-tags">
+                  <span class="ftag">Telegram</span>
+                  <span class="ftag green">Завжди під рукою</span>
+                </div>
+                <div class="fstep-detail">
+                  <div class="detail-title">Ефект для Олександра</div>
+                  <div class="detail-list">
+                    <div class="detail-item">Підготовка до зустрічі замість 45 хвилин займає 2 хвилини</div>
+                    <div class="detail-item">Жодна домовленість не забута і не пропущена</div>
+                    <div class="detail-item">Сильніша позиція на переговорах</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Brief simulation -->
+      <div class="sim-panel">
+        <div class="sim-card">
+          <div class="sim-header">
+            <div class="sim-dot" style="background:var(--accent3)"></div>
+            <div class="sim-title">Симуляція — бриф перед зустріччю</div>
+          </div>
+          <div class="sim-body">
+
+            <div style="margin-bottom:16px">
+              <div class="prog-wrap">
+                <div class="prog-label"><span>Аналіз попередніх зустрічей</span><span id="prepPct">0%</span></div>
+                <div class="prog-bar"><div class="prog-fill blue" id="prepBar"></div></div>
+              </div>
+            </div>
+
+            <div class="brief-card" id="briefCard" style="opacity:0.3;transition:opacity 0.5s">
+              <div class="brief-row">
+                <div class="brief-key">Контрагент</div>
+                <div class="brief-val"><strong>Постачальник М'ясопром</strong> — 8 зустрічей за рік</div>
+              </div>
+              <div class="brief-row">
+                <div class="brief-key">Остання зустріч</div>
+                <div class="brief-val">12 травня — обговорення цін Q4. <strong>Домовились: +15% обсяг, фіксована ціна до грудня</strong></div>
+              </div>
+              <div class="brief-row">
+                <div class="brief-key">Відкриті питання</div>
+                <div class="brief-val">⚠️ Договір досі не підписаний (юрист не повернув). Логістика на листопад не узгоджена.</div>
+              </div>
+              <div class="brief-row">
+                <div class="brief-key">Рекомендація AI</div>
+                <div class="brief-val"><strong>Закрити питання договору.</strong> Постачальник 2 рази нагадував — ризик затримки поставок.</div>
+              </div>
+              <div class="brief-row">
+                <div class="brief-key">Ваша позиція</div>
+                <div class="brief-val">Запросити знижку 3% на обсяг понад план — прецедент з Q2 є в протоколі від березня.</div>
+              </div>
+            </div>
+
+            <button class="run-btn blue" id="prepBtn" onclick="runPrep()" style="margin-top:16px">
+              ▶ Сформувати бриф
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALSO SECTION -->
+  <div class="also-section fade in">
+    <div class="also-title">Це рішення також застосовується для</div>
+    <div class="also-sub">Та сама автоматизація — інші контексти використання</div>
+    <div class="also-grid">
+      <div class="also-card">
+        <div class="also-icon">🤝</div>
+        <div class="also-name">Переговори з партнерами</div>
+        <div class="also-desc">Всі переговори з дистрибуторами, дилерами, стратегічними партнерами — повна історія і підготовка автоматично.</div>
+      </div>
+      <div class="also-card">
+        <div class="also-icon">📞</div>
+        <div class="also-name">Дзвінки відділу продажів</div>
+        <div class="also-desc">Кожен дзвінок менеджера з клієнтом транскрибується, задачі ставляться в CRM, керівник бачить зведену аналітику.</div>
+      </div>
+      <div class="also-card">
+        <div class="also-icon">🏛️</div>
+        <div class="also-name">Зустрічі з держорганами</div>
+        <div class="also-desc">Офіційні зустрічі і наради — автоматичний протокол, відстеження виконання доручень, нагадування про дедлайни.</div>
+      </div>
+      <div class="also-card">
+        <div class="also-icon">👥</div>
+        <div class="also-name">Внутрішні наради команди</div>
+        <div class="also-desc">Щотижневі планерки, стратегічні сесії — задачі одразу в систему, ніхто не забуває що мав зробити після наради.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ===== FLOW STEPS =====
+function setStep(panel, idx) {
+  const steps = document.querySelectorAll(`#${panel}-steps .fstep`);
+  steps.forEach((s, i) => s.classList.toggle('active', i === idx));
+}
+
+// ===== ONLINE SIMULATION =====
+let onlineDone = false;
+function runOnline() {
+  if (onlineDone) return;
+  const btn = document.getElementById('onlineBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Обробка...';
+
+  const steps = [
+    {id:'op1', delay:500, label:'✓ Готово'},
+    {id:'op2', delay:1500, label:'✓ Готово'},
+    {id:'op3', delay:2800, label:'✓ Готово'},
+    {id:'op4', delay:4000, label:'✓ Готово'},
+  ];
+
+  // Mark first as active
+  document.getElementById('op1').classList.add('active');
+  document.querySelector('#op1 .proc-status').textContent = '...';
+
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(s.id);
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.proc-status').textContent = s.label;
+
+      if (i < steps.length - 1) {
+        const next = document.getElementById(steps[i+1].id);
+        next.classList.add('active');
+        next.querySelector('.proc-status').textContent = '...';
+      }
+
+      setStep('online', i);
+
+      if (i === steps.length - 1) {
+        document.getElementById('onlineOutput').classList.add('show');
+        btn.textContent = '✓ Завершено';
+        onlineDone = true;
+      }
+    }, s.delay);
+  });
+}
+
+// ===== OFFLINE DICTAPHONE =====
+let recording = false;
+let timerInterval = null;
+let seconds = 0;
+let offlineDone = false;
+
+function toggleRecording() {
+  const btn = document.getElementById('dictBtn');
+  const status = document.getElementById('dictStatus');
+  const wave = document.getElementById('audioWave');
+  const timer = document.getElementById('dictTimer');
+
+  if (!recording) {
+    recording = true;
+    btn.classList.add('recording');
+    btn.textContent = '⏹️';
+    status.textContent = 'Запис...';
+    status.classList.add('recording');
+    wave.style.display = 'flex';
+    seconds = 0;
+
+    timerInterval = setInterval(() => {
+      seconds++;
+      const m = Math.floor(seconds/60).toString().padStart(2,'0');
+      const s = (seconds%60).toString().padStart(2,'0');
+      timer.textContent = m + ':' + s;
+
+      if (seconds >= 8) stopRecording();
+    }, 1000);
+
+  } else {
+    stopRecording();
+  }
+}
+
+function stopRecording() {
+  if (!recording) return;
+  recording = false;
+  clearInterval(timerInterval);
+
+  const btn = document.getElementById('dictBtn');
+  const status = document.getElementById('dictStatus');
+  const wave = document.getElementById('audioWave');
+
+  btn.classList.remove('recording');
+  btn.textContent = '✓';
+  btn.style.background = 'var(--accent2)';
+  status.textContent = 'Надсилаємо на обробку...';
+  status.classList.remove('recording');
+  wave.style.display = 'none';
+
+  if (!offlineDone) runOffline();
+}
+
+function runOffline() {
+  offlineDone = true;
+  const procs = [
+    {id:'offp1', delay:800},
+    {id:'offp2', delay:2000},
+    {id:'offp3', delay:3500},
+  ];
+
+  document.getElementById('offp1').classList.add('active');
+  document.querySelector('#offp1 .proc-status').textContent = '...';
+
+  procs.forEach((p, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(p.id);
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.proc-status').textContent = '✓ Готово';
+      setStep('offline', i);
+
+      if (i < procs.length - 1) {
+        const next = document.getElementById(procs[i+1].id);
+        next.classList.add('active');
+        next.querySelector('.proc-status').textContent = '...';
+      }
+
+      if (i === procs.length - 1) {
+        document.getElementById('offlineNotif').classList.add('show');
+        document.getElementById('dictStatus').textContent = 'Готово!';
+      }
+    }, p.delay);
+  });
+}
+
+// ===== PREP SIMULATION =====
+let prepDone = false;
+function runPrep() {
+  if (prepDone) return;
+  prepDone = true;
+  const btn = document.getElementById('prepBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Аналізую зустрічі...';
+
+  const bar = document.getElementById('prepBar');
+  const pct = document.getElementById('prepPct');
+  const brief = document.getElementById('briefCard');
+
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 4;
+    bar.style.width = progress + '%';
+    pct.textContent = progress + '%';
+
+    if (progress >= 40) setStep('prep', 0);
+    if (progress >= 70) setStep('prep', 1);
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      brief.style.opacity = '1';
+      setStep('prep', 2);
+      btn.textContent = '✓ Бриф сформовано';
+      btn.style.background = 'var(--accent2)';
+      btn.style.borderColor = 'var(--accent2)';
+    }
+  }, 60);
+}
+
+// ===== SCROLL ANIMATIONS =====
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
